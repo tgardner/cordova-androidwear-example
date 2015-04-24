@@ -13,4 +13,5 @@
         <param name="id" value="net.trentgardner.cordova.androidwear" />
         <param name="url" value="https://github.com/tgardner/cordova-androidwear.git" />
     </feature>
+    <engine name="android" spec="^4.0.0" />
 </widget>
