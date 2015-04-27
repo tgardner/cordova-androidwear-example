@@ -1,6 +1,7 @@
 GRADLE = gradlew
 CWD = $(shell pwd)
 CORDOVA = $(shell which cordova)
+CORDOVA_VERSION = $(shell cordova -v | sed -e 's/\..*//g')
 CORDOVA_PROJECT = $(CWD)/phone
 WEAR_PROJECT = $(CWD)/wear
 ANDROID_PLATFORM = $(CORDOVA_PROJECT)/platforms/android
@@ -26,6 +27,10 @@ export WEARABLE_CONFIG_BODY
 all: cordova_prepare clean wear config_phone phone
 
 cordova_prepare:
+	if [ ${CORDOVA_VERSION} -lt 5 ] ; then \
+		echo "You must have at least cordova 5.0.0. Please run 'npm update -g cordova'" && \
+		exit 1 ; \
+	fi
 	cd "$(CORDOVA_PROJECT)" && $(CORDOVA) prepare
 
 config_phone: 
