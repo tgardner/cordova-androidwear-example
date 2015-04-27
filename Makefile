@@ -27,10 +27,10 @@ export WEARABLE_CONFIG_BODY
 all: cordova_prepare clean wear config_phone phone
 
 cordova_prepare:
-	if [ ${CORDOVA_VERSION} -lt 5 ] ; then \
-		echo "You must have at least cordova 5.0.0. Please run 'npm update -g cordova'" && \
-		exit 1 ; \
-	fi
+	#if [ ${CORDOVA_VERSION} -lt 5 ] ; then \
+	#	echo "You must have at least cordova 5.0.0. Please run 'npm update -g cordova'" && \
+	#	exit 1 ; \
+	#fi
 	cd "$(CORDOVA_PROJECT)" && $(CORDOVA) prepare
 
 config_phone: 
