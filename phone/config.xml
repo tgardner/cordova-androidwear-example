@@ -4,14 +4,11 @@
     <description>
         A sample Apache Cordova application that responds to the deviceready event.
     </description>
-    <author email="dev@cordova.apache.org" href="http://cordova.io">
-        Apache Cordova Team
+    <author email="trent@tgitconsulting.com.au" href="http://trentgardner.net">
+        Trent Gardner
     </author>
     <content src="index.html" />
     <access origin="*" />
-    <feature name="Android Wear Connector">
-        <param name="id" value="net.trentgardner.cordova.androidwear" />
-        <param name="url" value="https://github.com/tgardner/cordova-androidwear.git" />
-    </feature>
-    <engine name="android" spec="^4.0.0" />
+    <plugin name="cordova-androidwear" spec="^1.0.0" />
+    <engine name="android" spec="^7.0.0" />
 </widget>
