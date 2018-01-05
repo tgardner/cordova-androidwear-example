@@ -16,11 +16,9 @@ public class WearListenerService extends WearableListenerService {
         Log.d(TAG, "onMessageReceived");
 
         if(messageEvent.getPath().equals(Constants.MESSAGE_RECEIVED_PATH)) {
-            final String message = new String(messageEvent.getData());
-            // handle
-            Intent intent = new Intent("MessageReceived");
-            intent.putExtra("message", message);
-            sendBroadcast(intent);
+            Intent startIntent = new Intent(this, MainActivity.class);
+            startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(startIntent);
         } else {
             super.onMessageReceived(messageEvent);
         }

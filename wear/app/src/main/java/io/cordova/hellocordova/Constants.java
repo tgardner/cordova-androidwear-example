@@ -5,7 +5,7 @@ package io.cordova.hellocordova;
  */
 public final class Constants {
 
-    public static final String MESSAGE_RECEIVED_PATH = "net.trentgardner.cordova.androidwear.NewMessage";
+    public static final String MESSAGE_RECEIVED_PATH = "/NewMessage";
 
 }
 

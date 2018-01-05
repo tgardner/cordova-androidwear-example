@@ -1,55 +1,46 @@
 package io.cordova.hellocordova;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+import com.google.android.gms.wearable.CapabilityClient;
+import com.google.android.gms.wearable.CapabilityInfo;
+import com.google.android.gms.wearable.MessageClient;
+import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
 public class MainActivity extends Activity implements
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        MessageClient.OnMessageReceivedListener,
+        CapabilityClient.OnCapabilityChangedListener {
 
     private TextView mTextView;
-    private Button mButton;
-
-    private GoogleApiClient mGoogleApiClient;
-    private BroadcastReceiver messageReceiver;
+    private Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mTextView = (TextView)findViewById(R.id.text);
-        mButton = (Button)findViewById(R.id.button);
+        mTextView = findViewById(R.id.text);
+        Button mButton = findViewById(R.id.button);
 
-        // Build a new GoogleApiClient
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
+        mContext = this;
 
-        mGoogleApiClient.connect();
-
-        messageReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, final Intent intent) {
-                logMessage(intent.getStringExtra("message"));
-            }
-        };
-        registerReceiver(messageReceiver, new IntentFilter("MessageReceived"));
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         mButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,6 +49,30 @@ public class MainActivity extends Activity implements
                 logMessage("Message sent to cordova");
             }
         });
+
+        logMessage("onCreate");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Instantiates clients without member variables, as clients are inexpensive to create and
+        // won't lose their listeners. (They are cached and shared between GoogleApi instances.)
+        Wearable.getMessageClient(this).addListener(this);
+        Wearable.getCapabilityClient(this)
+                .addListener(
+                        this, Uri.parse("wear://"), CapabilityClient.FILTER_REACHABLE);
+
+        logMessage("onResume");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        Wearable.getMessageClient(this).removeListener(this);
+        Wearable.getCapabilityClient(this).removeListener(this);
     }
 
     private void logMessage(final String message) {
@@ -71,39 +86,37 @@ public class MainActivity extends Activity implements
     }
 
     @Override
-    public void onConnected(Bundle bundle) {
-        logMessage("Connected to play services");
+    public void onMessageReceived(@NonNull MessageEvent messageEvent) {
+        logMessage(Arrays.toString(messageEvent.getData()));
     }
 
     @Override
-    public void onConnectionSuspended(int i) {
-        logMessage("Play services connection suspended");
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        logMessage("Play services connection failed");
+    public void onCapabilityChanged(@NonNull CapabilityInfo capabilityInfo) {
+        logMessage(capabilityInfo.toString());
     }
 
     private class MessageRunnable implements Runnable {
 
         @Override
         public void run() {
-            NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi
-                    .getConnectedNodes(mGoogleApiClient).await();
-            for (Node node : nodes.getNodes()) {
-                Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(),
-                        Constants.MESSAGE_RECEIVED_PATH, "Hello from AndroidWear".getBytes())
-                        .await();
+            try {
+                List<Node> nodes =
+                        Tasks.await(Wearable.getNodeClient(getApplicationContext())
+                                .getConnectedNodes());
+
+                for (Node node : nodes) {
+                    Task<Integer> messageTask = Wearable.getMessageClient(mContext).sendMessage(node.getId(),
+                            Constants.MESSAGE_RECEIVED_PATH, "Hello from AndroidWear".getBytes());
+                    Tasks.await(messageTask);
+                }
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(messageReceiver);
-        mGoogleApiClient.disconnect();
-
         super.onDestroy();
     }
 }
