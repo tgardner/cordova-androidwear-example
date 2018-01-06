@@ -19,7 +19,6 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -27,8 +26,9 @@ public class MainActivity extends Activity implements
         MessageClient.OnMessageReceivedListener,
         CapabilityClient.OnCapabilityChangedListener {
 
+    public static final String MESSAGE_PATH = "/NewMessage";
+
     private TextView mTextView;
-    private Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,19 +38,15 @@ public class MainActivity extends Activity implements
         mTextView = findViewById(R.id.text);
         Button mButton = findViewById(R.id.button);
 
-        mContext = this;
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         mButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 (new Thread(new MessageRunnable())).start();
-                logMessage("Message sent to cordova");
+                logMessage("Message sent to Cordova");
             }
         });
-
-        logMessage("onCreate");
     }
 
     @Override
@@ -63,8 +59,6 @@ public class MainActivity extends Activity implements
         Wearable.getCapabilityClient(this)
                 .addListener(
                         this, Uri.parse("wear://"), CapabilityClient.FILTER_REACHABLE);
-
-        logMessage("onResume");
     }
 
     @Override
@@ -87,12 +81,14 @@ public class MainActivity extends Activity implements
 
     @Override
     public void onMessageReceived(@NonNull MessageEvent messageEvent) {
-        logMessage(Arrays.toString(messageEvent.getData()));
+        if(messageEvent.getPath().equals(MESSAGE_PATH)) {
+            logMessage(new String(messageEvent.getData()));
+        }
     }
 
     @Override
     public void onCapabilityChanged(@NonNull CapabilityInfo capabilityInfo) {
-        logMessage(capabilityInfo.toString());
+        logMessage("onCapabilityChanged: " + capabilityInfo.getName());
     }
 
     private class MessageRunnable implements Runnable {
@@ -100,23 +96,19 @@ public class MainActivity extends Activity implements
         @Override
         public void run() {
             try {
+                Context mContext = getApplicationContext();
                 List<Node> nodes =
-                        Tasks.await(Wearable.getNodeClient(getApplicationContext())
+                        Tasks.await(Wearable.getNodeClient(mContext)
                                 .getConnectedNodes());
 
                 for (Node node : nodes) {
                     Task<Integer> messageTask = Wearable.getMessageClient(mContext).sendMessage(node.getId(),
-                            Constants.MESSAGE_RECEIVED_PATH, "Hello from AndroidWear".getBytes());
+                            MESSAGE_PATH, "Hello from AndroidWear".getBytes());
                     Tasks.await(messageTask);
                 }
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 }

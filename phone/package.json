@@ -1,7 +1,7 @@
 {
   "name": "io.cordova.hellocordova",
-  "version": "0.0.1",
-  "displayName": "HelloCordova",
+  "version": "0.0.2",
+  "displayName": "AndroidWearSample",
   "cordova": {
     "platforms": [
       "android"

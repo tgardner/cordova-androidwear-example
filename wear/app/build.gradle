@@ -22,6 +22,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    //noinspection GradleCompatible
     compile 'com.android.support:wear:27.0.2'
     compile 'com.google.android.support:wearable:2.1.0'
     provided 'com.google.android.wearable:wearable:2.1.0'
