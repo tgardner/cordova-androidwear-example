@@ -12,6 +12,6 @@
   },
   "dependencies": {
     "cordova-android": "^7.0.0",
-    "cordova-androidwear": "^1.0.0"
+    "cordova-androidwear": "^1.0.1"
   }
 }
